@@ -22,7 +22,7 @@ module.exports = hasBinary;
 
 function hasBinary(data) {
 
-  function _hasBinary(obj) {
+  function _hasBinary(obj, afterToJSON) {
     if (!obj) return false;
 
     if ( (global.Buffer && global.Buffer.isBuffer && global.Buffer.isBuffer(obj)) ||
@@ -41,8 +41,9 @@ function hasBinary(data) {
       }
     } else if (obj && 'object' == typeof obj) {
       // see: https://github.com/Automattic/has-binary/pull/4
-      if (obj.toJSON && 'function' == typeof obj.toJSON) {
-        obj = obj.toJSON();
+      // also: toJSON() can return any type. Restart the check, but don't call toJSON twice
+      if (!afterToJSON && obj.toJSON && 'function' == typeof obj.toJSON) {
+        return _hasBinary(obj.toJSON(), true);
       }
 
       for (var key in obj) {
